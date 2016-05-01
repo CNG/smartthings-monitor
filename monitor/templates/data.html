@@ -1,0 +1,39 @@
+$def with (jscode)
+
+<!DOCTYPE html>
+<html>
+  <head>
+	  <script src="https://www.gstatic.com/charts/loader.js"></script>
+  </head>
+  <body>
+	  <div id="chart_div" style="width:100%;height:1300px"></div>
+	  <script>
+  		//google.charts.load('current', {packages: ['line']});
+  		//google.charts.setOnLoadCallback(drawBasic);
+
+      google.charts.load('current', { packages: ['corechart'] });
+  		google.charts.setOnLoadCallback(drawBasic);
+
+  		function drawBasic() {
+
+          $:jscode
+
+	      var options = {
+	        hAxis: {
+	          title: 'Date'
+	        },
+	        vAxis: {
+	          title: 'Temperature'
+	        },
+	        interpolateNulls: true,
+	        //curveType: 'function',
+	      };
+
+	      //var chart = new google.charts.Line(document.getElementById('chart_div'));
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+
+	      chart.draw(jscode_data, options);
+	    }
+	  </script>
+  </body>
+</html>

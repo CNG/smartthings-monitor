@@ -1,0 +1,25 @@
+$def with (user)
+
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <code>$user</code>
+    $if user:
+      $if user['username']:
+        <p>Welcome, $user['username']!</p>
+      $else:
+        <!-- This shouldn't happen since there should always be a username when a user -->
+        <p>Welcome back!</p>
+      <ol>
+        $if 'token' in user:
+          <li>View your results at: <a href="$app_path('/data')/$user['shortcode']">$app_path('/data')/$user['shortcode']</a></li>
+        $else:
+          <li><a href="connect">Connect to SmartThings!</a></li>
+        <li><a href="logout">Log out</a></li>
+      </ol>
+    $else:
+      <p>Welcome to Monitor! <a href="login">Log in</a> or <a href="register">register</a>!</p>
+  </body>
+</html>
