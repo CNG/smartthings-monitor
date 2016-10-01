@@ -2,7 +2,7 @@
 
 Graph data gathered from [SmartThings][st] devices!
 
-This project is an experiment learning to interact with [SmartThings][st]. I didn't have a specific goal at the outset other than to see what data the service offers and to make some graphs. I expanded the scope as I developed before I even got to any graphing in hopes this could be made useful for others, and to get some experience with a few more technologies.
+This project is an experiment learning to interact with [SmartThings][st]. I didn't have a specific goal at the outset other than to see what data the service offers and to make some graphs. I expanded the scope as I developed before I even got to any graphing in hopes this could be made useful for others, and to get some experience with a few more technologies. Then I moved out of the house I was using for testing, and no longer have a SmartThings setup. Thus I will no longer be developing this, for now at least.
 
 ### How to use
 
@@ -11,7 +11,7 @@ SmartThings Monitor has two main parts:
 1. [Web Services SmartApp][wssa] that must be installed to a SmartThings location
 2. External application (powered by the code in this repository) to query the API provided by the SmartApp and generate charts, etc.
 
-SmartThings [requires approval](http://docs.smartthings.com/en/latest/smartapp-web-services-developers-guide/authorization.html) before SmartApps can be published by SmartThings and installed automatically. I have not sought such approval, so for now, if anyone else wants to use this app, they must install the code themselves as a custom SmartApp in their own account. That SmartApp code will be published separately and linked from here when I get a chance. 
+SmartThings [requires approval](http://docs.smartthings.com/en/latest/smartapp-web-services-developers-guide/authorization.html) before SmartApps can be published by SmartThings and installed automatically. I have not sought such approval, so for now, if anyone else wants to use this app, they must install the code themselves as a custom SmartApp in their own account. That SmartApp code I used is in [`monitor.groovy`](monitor.groovy). 
 
 While the external application code is available in this repository, end users don't need to install anything from here, as it's already running at [https://votecharlie.com/projects/monitor][home]. Anyone can sign up for an account there and use the service provided they have installed the requisite SmartApp.
 
