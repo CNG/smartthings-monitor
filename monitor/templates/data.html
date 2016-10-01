@@ -1,39 +1,58 @@
-$def with (jscode)
+$def with (values)
 
 <!DOCTYPE html>
 <html>
-  <head>
-	  <script src="https://www.gstatic.com/charts/loader.js"></script>
-  </head>
-  <body>
-	  <div id="chart_div" style="width:100%;height:1300px"></div>
-	  <script>
-  		//google.charts.load('current', {packages: ['line']});
-  		//google.charts.setOnLoadCallback(drawBasic);
+    <head>
+        <script src="https://www.gstatic.com/charts/loader.js"></script>
+        <link rel="stylesheet" href="/projects/monitor/static/jQRangeSlider/css/iThing.css">
+    </head>
+    <body>
+        <div id="chart_div" style="width:100%;height:600px"></div>
+        <div id="date_range"></div>
+        <script>
+        //google.charts.load('current', {packages: ['line']});
+        //google.charts.setOnLoadCallback(drawBasic);
 
-      google.charts.load('current', { packages: ['corechart'] });
-  		google.charts.setOnLoadCallback(drawBasic);
+        google.charts.load('current', { packages: ['corechart'] });
+        google.charts.setOnLoadCallback(drawBasic);
 
-  		function drawBasic() {
+        function drawBasic() {
 
-          $:jscode
+        $:values["jscode"]
 
-	      var options = {
-	        hAxis: {
-	          title: 'Date'
-	        },
-	        vAxis: {
-	          title: 'Temperature'
-	        },
-	        interpolateNulls: true,
-	        //curveType: 'function',
-	      };
+        var options = {
+        hAxis: {
+        title: 'Date'
+        },
+        vAxis: {
+        title: 'Temperature'
+        },
+        interpolateNulls: true,
+        //curveType: 'function',
+        };
 
-	      //var chart = new google.charts.Line(document.getElementById('chart_div'));
+        //var chart = new google.charts.Line(document.getElementById('chart_div'));
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 
-	      chart.draw(jscode_data, options);
-	    }
-	  </script>
-  </body>
+        chart.draw(jscode_data, options);
+        }
+        </script>
+
+        <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js" integrity="sha256-xNjb53/rY+WmG+4L6tTl9m6PpqknWZvRt0rO1SRnJzw=" crossorigin="anonymous"></script>
+        <script src="/projects/monitor/static/jQRangeSlider/jQDateRangeSlider-min.js"></script>
+        <script>
+            $$("#date_range").dateRangeSlider({
+                    bounds: {
+                        min: new Date($values["dates"]["bound"]["min"]),
+                        max: new Date($values["dates"]["bound"]["max"]),
+                    },
+                    defaultValues: {
+                        min: new Date($values["dates"]["default"]["min"] + 1*86400000),
+                        max: new Date($values["dates"]["default"]["max"] - 1*86400000),
+                    },
+            });
+        </script>
+
+    </body>
 </html>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Main controller for app that allows users to register and connect to an
 external API to retrieve data for graphing and other uses.
 
@@ -17,7 +16,6 @@ from webpy_mongodb_sessions.session import MongoStore
 import webpy_mongodb_sessions.users as users
 # API interaction, database and data handling
 import smartthings, processor
-from smartthings import db, SmartThings
 
 
 """
@@ -40,9 +38,9 @@ routes = (
     '/data/(.+)', 'data',
 )
 app     = web.application( routes, globals() )
-session = web.session.Session(app, MongoStore(db, 'sessions'))
+session = web.session.Session(app, MongoStore(smartthings.db))
 users.session = session
-users.collection = db.users
+users.collection = smartthings.db.users
 
 
 """
@@ -149,7 +147,7 @@ class register:
             password=users.pswd(password, username),
             )
         users.login(user)
-        log.debug('register.POST: user is {0}'.format(user))
+        log.debug('user is {0}'.format(user))
         raise web.seeother('/')
 
 
@@ -182,11 +180,11 @@ class login:
             params["password"],
             )
         if user:
-            log.debug('login.POST: user is {0}'.format(user))
+            log.debug('user is {0}'.format(user))
             users.login(user)
             raise web.seeother('/')
         else:
-            log.error('login.POST: login failed, so user not set')
+            log.error('login failed, so user not set')
             raise web.seeother('/error')
 
 
@@ -195,7 +193,7 @@ class logout:
 
     def GET(self):
         log.debug('logout.GET')
-        users.logout() # runs session.kill()
+        users.logout() #  runs session.kill()
         raise web.seeother('/')
 
 
@@ -217,25 +215,25 @@ class connect:
         log.debug('connect.GET')
         user = current_user()
         if user:
-            log.debug('connect.GET: user is {0}'.format(user))
-            st = SmartThings()
+            log.debug('user is {0}'.format(user))
+            st = smartthings.SmartThings()
             params = web.input()
-            log.debug('connect.GET: params is {0}'.format(params))
+            log.debug('params is {0}'.format(params))
             if 'code' in params:
-                # we just logged into SmartThings and got an oauth code
+                # We just logged into SmartThings and got an OAuth code.
                 user['token'] = st.token(params)
                 user[SHORT_KEY] = new_shortcode(
                     collection=users.collection,
                     keyname=SHORT_KEY,
                     )
-                users.register(**user) # not totally sure why the ** is needed
+                users.register(**user) #  not totally sure why need **
                 result_url = '/data/{0}'.format(user[SHORT_KEY])
                 raise web.seeother(result_url)
             else:
-                # we are about to redirect to SmartThings to authorize
+                # We are about to redirect to SmartThings to authorize.
                 raise web.seeother(st.auth_url())
         else:
-            log.error('oauth.GET: /connect was accessed without a user session.')
+            log.error('/connect was accessed without a user session.')
             raise web.seeother('/error')
 
 
@@ -259,12 +257,29 @@ class data:
         log.debug('data.GET')
         user = users.collection.find_one({SHORT_KEY: shortcode})
         if user:
-            log.debug('data.GET: shortcode {0} matches user {1}'.format(
-                shortcode, user))
+            log.debug('shortcode {0} matches user {1}'.format(shortcode, user))
         else:
-            log.debug('data.GET: no user found matching shortcode')
+            log.debug('no user found matching shortcode')
             raise web.seeother('/error')
         return render.data(processor.results(user["token"]))
+
+    def POST(self):
+        log.debug('data.POST')
+        params = web.input()
+        if "save" in params:
+        elif "update" in params:
+        else:
+
+
+
+        user = current_user()
+        if user:
+            log.debug('user is {0}'.format(user))
+            result_url = '/data/{0}'.format(user[SHORT_KEY])
+            raise web.seeother(result_url)
+        else:
+            log.error('/data was POSTed to without a user session.')
+            raise web.seeother('/error')
 
 
 if __name__ == "__main__":

@@ -22,7 +22,8 @@ things = st.things("temperature")
 #print things.count()
 
 for thing in things[:]:
-    states = st.states(thing["id"], "temperature")
+    #states = st.states(thing["id"], "temperature")
+    print st.states_range(thing["id"], "temperature")
     #if states:
         #for state in states:
             #print state

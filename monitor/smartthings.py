@@ -4,17 +4,32 @@ log.debug("smartthings.py loaded")
 
 import json
 from requests_oauthlib import OAuth2Session
-from pymongo import MongoClient
-db = MongoClient().monitor
-
+import pymongo
 from datetime import datetime, timedelta
 
 
-"""Configure collections for export and use internally."""
-ACCOUNTS = db.accounts
-THINGS   = db.things
-STATES   = db.states
-CALLS    = db.calls
+db = pymongo.MongoClient().monitor
+
+
+def accounts():
+    """Return all accounts with token, meaning they have been connected to API."""
+    return [x for x in db.accounts.find() if x["token"] is not None]
+
+
+def delete_docs(collection=None):
+    """TODO DOCS Delete all documents, clearing history and accounts."""
+    if collection is None or collection is "accounts":
+        db.accounts.delete_many({})
+    if collection is None or collection is "things":
+        db.things.delete_many({})
+    if collection is None or collection is "states":
+        db.states.delete_many({})
+    if collection is None or collection is "calls":
+        db.calls.delete_many({})
+    if collection is "users":
+        db.users.delete_many({})
+    if collection is "sessions":
+        db.sessions.delete_many({})
 
 
 class SmartThings(object):
@@ -103,7 +118,7 @@ class SmartThings(object):
     def _save(self):
         """Store token data and endpoint in accounts if we have a token."""
         if self._token:
-            ACCOUNTS.update_one(
+            db.accounts.update_one(
                 {"token": self._token},
                 {"$set": {
                         "token_dict": self._token_dict,
@@ -119,7 +134,7 @@ class SmartThings(object):
         Args:
             token (str): Token from account we want to retrieve full data.
         """
-        account = ACCOUNTS.find_one(
+        account = db.accounts.find_one(
             {"token": token},
         )
         self._token_dict = account['token_dict']
@@ -141,7 +156,7 @@ class SmartThings(object):
             token=self.token(),
         )
         # get existing query record
-        document = CALLS.find_one(params)
+        document = db.calls.find_one(params)
         if document and "date" in document:
             # return date of original record
             return document["date"]
@@ -163,7 +178,7 @@ class SmartThings(object):
             token=self.token(),
         )
         # Update or insert query record with now().
-        CALLS.update_one(
+        db.calls.update_one(
             params,
             {"$set": {"date": datetime.now()}},
             upsert=True,
@@ -246,7 +261,7 @@ class SmartThings(object):
             data = [x for x in response.json() if x is not None]
             # instead of figuring out which things no longer get returned,
             # set all "active" fields to false first and add with true
-            THINGS.update_many(
+            db.things.update_many(
                 { "token": self.token() },
                 { "$set": {
                         "active": False,
@@ -258,7 +273,7 @@ class SmartThings(object):
             for item in data:
                 item["token"]  = self.token()
                 item["active"] = True
-                result = THINGS.replace_one(
+                result = db.things.replace_one(
                     {
                         "token": self.token(),
                         "id":    item["id"],
@@ -273,7 +288,7 @@ class SmartThings(object):
                 .format(len(data), inserted_count, len(data) - inserted_count)
             )
         # Get final data from database
-        return THINGS.find({
+        return db.things.find({
             "active": True,
             "token":  self.token(),
         })
@@ -287,10 +302,38 @@ class SmartThings(object):
             Thing.
 
         """
-        return THINGS.find_one({
+        return db.things.find_one({
             "token": self.token(),
             "id":    thing_id,
         })
+
+    def states_range(self, thing_id, state=None):
+        """Get date range of stored states for the thing with a given ID.
+
+        Args:
+            thing_id (str): Limit to the thing with this ID.
+            state (Optional[str]): Limit to this type of state.
+        Returns:
+            Dictionary with `min` and `max` keys corresponding to dates of
+            the extreme data points for specified state.
+
+        """
+        # First update local database from API.
+        self.states(thing_id, state)
+        # Query local database for all states sorted by date.
+        params = {
+            "thing_id": thing_id,
+        }
+        if state is not None:
+            params["state"] = state
+        cursor = db.states.find(params).sort([
+            ("date", pymongo.ASCENDING),
+        ])
+        # Return dates of first and last items.
+        return {
+            "min": cursor[0]["date"],
+            "max": cursor[cursor.count()-1]["date"],
+        }
 
     def states(self, thing_id, state=None, since=None, until=None):
         """Get states for the thing with a given ID. First call self._get() to
@@ -341,7 +384,7 @@ class SmartThings(object):
                 # Convert string date to Python date.
                 item["date"]      = datetime.strptime(item["date"],'%Y-%m-%dT%H:%M:%SZ')
                 # Insert retrieved things into database, overwriting any duplicates.
-                result = STATES.replace_one(
+                result = db.states.replace_one(
                     {
                         "thing_id": thing_id,
                         "state":    state,
@@ -357,14 +400,12 @@ class SmartThings(object):
                 .format(len(data), inserted_count, len(data) - inserted_count)
             )
         # Get final data from database.
-        return STATES.find(_params(kind="db"))
+        return db.states.find(_params(kind="db"))
 
 
-
-
-
-
-
-
-
-
+def attributes(thing):
+    attributes = set()
+    for capability in thing["capabilities"]:
+        for attribute in capability["attributes"]:
+            attributes.add(attribute)
+    return attributes
