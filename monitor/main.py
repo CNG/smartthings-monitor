@@ -267,9 +267,11 @@ class data:
         log.debug('data.POST')
         params = web.input()
         if "save" in params:
+	  pass
         elif "update" in params:
-        else:
-
+          pass
+	else:
+	  pass
 
 
         user = current_user()
